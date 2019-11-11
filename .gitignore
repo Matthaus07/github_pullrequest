@@ -1,0 +1,5 @@
+node_modules
+.cache
+src/api/.env
+package-lock.json
+src/client/node_modules
