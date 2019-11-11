@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import qs from 'qs';
 import { makeStyles } from '@material-ui/core/styles';
 import {
@@ -7,7 +7,7 @@ import {
 } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
 import UserTable from '../component/Table';
-import api from '../config/config_api'
+import api from '../config/config_api';
 const useStyles = makeStyles(theme => ({
     wrapper: {
         padding: '2em'
@@ -18,6 +18,7 @@ const useStyles = makeStyles(theme => ({
     },
     table: {
         minWidth: 650,
+        cursor: 'pointer',
     },
     root: {
         padding: '2px 4px',
@@ -35,6 +36,9 @@ const useStyles = makeStyles(theme => ({
     button: {
         margin: theme.spacing(1),
     },
+    background: {
+        background: 'white'
+    }
 }));
 
 
@@ -53,7 +57,6 @@ function analisarResposta(response) {
     return response.json();
 }
 
-
 function parseJsonResponse(jsonResponse) {
     return jsonResponse.map(row => {
         return {
@@ -67,16 +70,22 @@ function parseJsonResponse(jsonResponse) {
     });
 }
 
-
 export default function App() {
-  //Using react rooks
+    //Using react rooks
     const classes = useStyles();
     const [loading, setLoading] = useState(false);
     const [rows, setRows] = useState([]);
     const [records, setRecords] = useState([]);
     const [selectedID, setSelectedID] = useState(null);
     const [termoPesquisa, setTermoPesquisa] = useState('yahoo/kafka-manager');
-   
+
+    const list_pullrequest = () => {
+        return api.get('list')
+            .then(rows => {
+                setRecords(rows.data.data);
+                console.log(rows.data.data)
+            })
+    }
     const gravarPullRequests = async (e) => {
 
         const data = rows.filter(i => {
@@ -85,16 +94,15 @@ export default function App() {
         api.post('/create', {
             data: qs.stringify(data[0])
         })
-        .then(resp =>{
-            alert("Save Success!")
-            return resp;
-        })
-     
-        api.get('list')
-            .then(rows => {
-                setRecords(rows);
+            .then(resp => {
+                alert("Save Success!")
             })
+            .then(() => list_pullrequest())
     };
+
+    useEffect(() => {
+        list_pullrequest()
+    }, [])
 
     const consultarPullRequests = async e => {
 
@@ -129,9 +137,11 @@ export default function App() {
         <React.Fragment>
             <CssBaseline />
             <Container maxWidth="md" className={classes.wrapper}>
-                <Box component="h3">
-                <Typography>Search pull request list</Typography>
+                <Box component="h2">
+                    Search pull request list
                 </Box>
+                <Typography>Example: input(User+Repository) </Typography>
+
                 <Grid container spacing={3}>
                     <Grid item xs={12}>
                         <Paper className={classes.root}>
@@ -158,7 +168,7 @@ export default function App() {
                             <Table className={classes.table} size="small">
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>#</TableCell>
+                                        <TableCell>Id</TableCell>
                                         <TableCell>User</TableCell>
                                         <TableCell>Title</TableCell>
                                         <TableCell>Created At</TableCell>
@@ -184,7 +194,7 @@ export default function App() {
                                             </TableCell>
                                             <TableCell>{row.createatpull}</TableCell>
                                             <TableCell>{row.state}</TableCell>
-                                            <TableCell>{row.urlpull}</TableCell>
+                                            <TableCell><Box component='a' href={row.urlpull}>Click Here</Box></TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -193,12 +203,14 @@ export default function App() {
                     </Grid>
 
                     <Grid item xs={12}>
-                        <Button variant="contained" color="primary" className={classes.button}
+                        <Button item xs={6} variant="contained" color="primary" className={classes.button}
                             disabled={rows.length === 0} onClick={gravarPullRequests}>
-                            Gravar
+                            Save
                         </Button>
                     </Grid>
                 </Grid>
+                <Box component="h2">
+                    Table users</Box>
                 <UserTable rows={records} />
             </Container>
         </React.Fragment>
