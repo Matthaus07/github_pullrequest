@@ -42,17 +42,17 @@ const useStyles = makeStyles(theme => ({
 }));
 
 
-function analisarResposta(response) {
+function pullrequestcheck(response) {
 
     if (!response.ok) {
 
-        let mensagemErro = 'There was an error performing remote query.';
+        let mensageErro = 'There was an error performing remote query.';
 
         if (response.status === 404) {
-            mensagemErro = 'The repository was not found.';
+            mensageErro = 'The repository was not found.';
         }
 
-        throw new Error(mensagemErro);
+        throw new Error(mensageErro);
     }
     return response.json();
 }
@@ -71,22 +71,21 @@ function parseJsonResponse(jsonResponse) {
 }
 
 export default function App() {
-    //Using react rooks
+    //Using React Hooks
     const classes = useStyles();
     const [loading, setLoading] = useState(false);
     const [rows, setRows] = useState([]);
     const [records, setRecords] = useState([]);
     const [selectedID, setSelectedID] = useState(null);
-    const [termoPesquisa, setTermoPesquisa] = useState('yahoo/kafka-manager');
+    const [search, setSearch] = useState('yahoo/kafka-manager');
 
     const list_pullrequest = () => {
         return api.get('list')
             .then(rows => {
                 setRecords(rows.data.data);
-                console.log(rows.data.data)
             })
     }
-    const gravarPullRequests = async (e) => {
+    const pullRequestRecord = async (e) => {
 
         const data = rows.filter(i => {
             return selectedID === i.id
@@ -94,8 +93,8 @@ export default function App() {
         api.post('/create', {
             data: qs.stringify(data[0])
         })
-            .then(resp => {
-                alert("Save Success!")
+            .then(() => {
+                alert("Saved Data!")
             })
             .then(() => list_pullrequest())
     };
@@ -104,20 +103,20 @@ export default function App() {
         list_pullrequest()
     }, [])
 
-    const consultarPullRequests = async e => {
+    const pullRequestConfer = async e => {
 
         // clear lists of pull request
         setRows([]);
 
         // Endpoint search for url
-        const apiEndpoint = `https://api.github.com/repos/${termoPesquisa}/pulls`;
+        const apiEndpoint = `https://api.github.com/repos/${search}/pulls`;
 
         // initial search
         setLoading(true);
 
         // query pull requests in github API and render in table
         fetch(apiEndpoint)
-            .then(analisarResposta)
+            .then(pullrequestcheck)
             .then(parseJsonResponse)
             .then(rows => {
                 setLoading(false);
@@ -130,7 +129,7 @@ export default function App() {
     };
 
     const searchHandle = e => {
-        setTermoPesquisa(e.target.value);
+        setSearch(e.target.value);
     };
 
     return (
@@ -148,7 +147,7 @@ export default function App() {
                             <InputBase
                                 className={classes.input}
                                 placeholder="Repository"
-                                value={termoPesquisa}
+                                value={search}
                                 onChange={searchHandle} />
                             <Fade unmountOnExit
                                 in={loading}
@@ -157,7 +156,7 @@ export default function App() {
                                 }}>
                                 <CircularProgress />
                             </Fade>
-                            <IconButton className={classes.iconButton} aria-label="search" onClick={consultarPullRequests}>
+                            <IconButton className={classes.iconButton} aria-label="search" onClick={pullRequestConfer}>
                                 <SearchIcon />
                             </IconButton>
                         </Paper>
@@ -203,8 +202,8 @@ export default function App() {
                     </Grid>
 
                     <Grid item xs={12}>
-                        <Button item xs={6} variant="contained" color="primary" className={classes.button}
-                            disabled={rows.length === 0} onClick={gravarPullRequests}>
+                        <Button  xs={6} variant="contained" color="primary" className={classes.button}
+                            disabled={rows.length === 0} onClick={pullRequestRecord}>
                             Save
                         </Button>
                     </Grid>
